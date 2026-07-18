@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t pavanwork10/mavenapp:latest .'
+                sh 'docker build -t haravinashivaprasad1/mavenapp:latest .'
             }
         }
 
@@ -35,7 +35,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                sh 'docker push pavanwork10/mavenapp:latest'
+                sh 'docker push haravinashivaprasad1/mavenapp:latest'
             }
         }
     }
