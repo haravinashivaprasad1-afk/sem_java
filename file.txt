@@ -1,0 +1,116 @@
+ca@administrator:~/Desktop/java_sem$ opencode run "check my vagrant file and say how to open two vm in separate terminals and connect master to worker and pull the docker image haravinashivaprasad1/mavenapp and run server in master and worker"
+
+> build · big-pickle
+
+→ Read Vagrantfile
+✱ Glob "**/Vagrantfile" 1 match
+
+Your Vagrantfile defines two VMs: **manager** (192.168.56.10) and **worker1** (192.168.56.11). Here's what to do:
+
+### Start both VMs
+```bash
+vagrant up
+```
+
+### Open two separate terminals
+```bash
+# Terminal 1 - connect to manager
+vagrant ssh manager
+
+# Terminal 2 - connect to worker1
+vagrant ssh worker1
+```
+
+### Initialize Docker Swarm (on manager)
+In the **manager** terminal:
+```bash
+sudo docker swarm init --advertise-addr 192.168.56.10
+```
+It will output a join token like:
+```
+docker swarm join --token SWMTKN-xxxx 192.168.56.10:2377
+```
+
+### Join worker1 to manager
+In the **worker1** terminal, paste that join command:
+```bash
+sudo docker swarm join --token SWMTKN-xxxx 192.168.56.10:2377
+```
+
+### Verify on manager
+```bash
+sudo docker node ls
+```
+
+### Pull and run on manager
+```bash
+sudo docker pull haravinashivaprasad1/mavenapp
+sudo docker service create --name myservice --publish 8080:8080 --replicas 2 haravinashivaprasad1/mavenapp
+```
+This will deploy 2 replicas across manager and worker1.
+
+### Or run individually on each
+
+**Manager:**
+```bash
+sudo docker pull haravinashivaprasad1/mavenapp
+sudo docker run -d -p 8080:8080 --name server haravinashivaprasad1/mavenapp
+```
+
+**Worker1:**
+```bash
+sudo docker pull haravinashivaprasad1/mavenapp
+sudo docker run -d -p 8080:8080 --name server haravinashivaprasad1/mavenapp
+```
+
+Access the app at:
+- Manager: `http://192.168.56.10:8080`
+- Worker1: `http://192.168.56.11:8080`
+
+---
+
+## How to Stop the Running Process / Cluster
+
+### Stop Docker Service (on manager terminal)
+```bash
+sudo docker service rm myservice
+```
+
+### Stop Docker Container (if run individually on each VM)
+**Manager:**
+```bash
+sudo docker stop server
+sudo docker rm server
+```
+
+**Worker1:**
+```bash
+sudo docker stop server
+sudo docker rm server
+```
+
+### Leave Docker Swarm (on worker1 terminal)
+```bash
+sudo docker swarm leave
+```
+
+### Leave Docker Swarm (on manager terminal - force remove cluster)
+```bash
+sudo docker swarm leave --force
+```
+
+### Stop both VMs (from your local terminal)
+```bash
+vagrant halt
+```
+
+### Stop a specific VM
+```bash
+vagrant halt manager
+vagrant halt worker1
+```
+
+### Destroy both VMs completely
+```bash
+vagrant destroy -f
+```
